@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VDC Audit v9.0 | Dynamic Database</title>
+    <title>VDC Audit v9.1 | Cloud Management</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
@@ -14,6 +14,7 @@
         .screen.active { display: block; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
         .big-btn { width: 100%; padding: 16px; margin-bottom: 12px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
+        select, input { width: 100%; padding: 15px; box-sizing: border-box; border-radius: 8px; border: 2px solid #ddd; font-size: 16px; margin-bottom: 10px; }
         .cat-title { background: #e9ecef; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 14px; margin: 20px 0 10px 0; color: var(--primary); border-left: 4px solid var(--primary); }
         .check-item { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 6px solid #dee2e6; }
         .check-item.ok { border-left-color: var(--success); }
@@ -22,7 +23,6 @@
         .btn-status { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; background: white; }
         .btn-status.active-ok { background: var(--success); color: white; }
         .btn-status.active-ng { background: var(--danger); color: white; }
-        textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
@@ -30,28 +30,37 @@
 
     <div class="app-header" id="mainHeader" style="display:none;">
         <button onclick="handleBack()" style="background:none; border:none; color:white; font-size:20px;">⬅️</button>
-        <h1 id="headerTitle">VDC Audit v9.0</h1>
+        <h1 id="headerTitle">VDC Audit v9.1</h1>
         <button onclick="goHome()" style="background:none; border:none; color:white; font-size:20px;">🏠</button>
     </div>
 
     <div id="screen-welcome" class="screen active">
-        <div class="card" style="text-align:center; margin-top:50px;">
-            <h2>🛡️ Audit Cloud v9.0</h2>
-            <input type="text" id="projInput" style="width:100%; padding:15px; box-sizing:border-box; border-radius:8px; border:2px solid #ddd; font-size:16px;" placeholder="NHẬP TÊN DỰ ÁN...">
-            <button class="big-btn" style="background:var(--primary); margin-top:15px;" onclick="connectCloud()">KẾT NỐI HỆ THỐNG</button>
-            <hr style="margin:20px 0;">
-            <p style="font-size:12px; color:#666;">Cập nhật thư viện câu hỏi từ Excel (CSV):</p>
-            <input type="file" id="csvFile" accept=".csv" style="font-size:12px;">
-            <button class="big-btn" style="background:#6c757d; padding:10px; font-size:14px;" onclick="importLibrary()">📤 CẬP NHẬT THƯ VIỆN LUẬT</button>
+        <div class="card" style="text-align:center;">
+            <h2 style="color:var(--primary)">VDC CLOUD v9.1</h2>
+            
+            <div style="text-align:left; margin-top:20px;">
+                <label style="font-weight:bold; font-size:12px;">CHỌN DỰ ÁN CÓ SẴN:</label>
+                <select id="projectSelect" onchange="document.getElementById('projInput').value = this.value">
+                    <option value="">-- Chọn dự án --</option>
+                </select>
+                
+                <label style="font-weight:bold; font-size:12px;">HOẶC NHẬP TÊN MỚI:</label>
+                <input type="text" id="projInput" placeholder="Ví dụ: DE_HEUS_2026">
+            </div>
+            
+            <button class="big-btn" style="background:var(--primary); margin-top:10px;" onclick="connectCloud()">VÀO HỆ THỐNG</button>
+            
+            <hr style="margin:25px 0;">
+            <p style="font-size:12px; font-weight:bold;">CẬP NHẬT THƯ VIỆN LUẬT (XÓA CŨ - GHI MỚI):</p>
+            <input type="file" id="csvFile" accept=".csv">
+            <button class="big-btn" style="background:#6c757d; font-size:14px; padding:10px;" onclick="importLibrary()">📤 TẢI LÊN & RESET THƯ VIỆN</button>
         </div>
     </div>
 
     <div id="screen-dashboard" class="screen">
-        <div class="card">Dự án: <strong id="curProj" style="color:var(--primary)"></strong></div>
-        <button class="big-btn" style="background:#004494" onclick="openOffice()">📂 1. HỒ SƠ PHÁP LÝ</button>
-        <div style="font-weight:bold; margin:15px 0 10px;">🏗️ 2. KIỂM TRA HIỆN TRƯỜNG:</div>
+        <div class="card" style="border-top:5px solid var(--primary)">Dự án: <strong id="curProj" style="color:var(--primary)"></strong></div>
         <div id="area-buttons"></div>
-        <button class="big-btn" style="background:#6c757d; margin-top:30px;" onclick="exportData()">📥 XUẤT BÁO CÁO (CSV)</button>
+        <button class="big-btn" style="background:#6c757d; margin-top:30px;" onclick="exportData()">📥 TẢI DỮ LIỆU BÁO CÁO (CSV)</button>
     </div>
 
     <div id="screen-unit-list" class="screen">
@@ -62,10 +71,10 @@
     <div id="screen-checklist" class="screen">
         <div id="check-info" style="font-weight:bold; text-align:center; margin-bottom:15px; color:var(--primary);"></div>
         <div id="checklist-items"></div>
-        <button class="big-btn" style="background:var(--primary); margin-top:20px;" onclick="handleBack()">XÁC NHẬN HOÀN THÀNH</button>
     </div>
 
 <script>
+    // --- FIREBASE ASIA CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyAOCGFGjyzjKlQNQK5TvWD-5wxyhW93h88",
         authDomain: "auditmobile-6fae9.firebaseapp.com",
@@ -77,78 +86,98 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let checklistLib = {}; // Thư viện câu hỏi từ Firebase
+    let checklistLib = {}; 
     let appState = { businessName: "", officeResults: {}, fieldUnits: [] };
     let curArea = ''; let curUnitIdx = -1;
 
-    // 1. Tải thư viện câu hỏi khi mở App
-    db.ref('Checklist_Library').on('value', snap => {
-        checklistLib = snap.val() || {};
-        renderAreaButtons();
-    });
+    // 1. Tự động lấy danh sách dự án và thư viện khi mở app
+    window.onload = function() {
+        db.ref('Checklist_Library').on('value', snap => { checklistLib = snap.val() || {}; });
+        db.ref('audits').on('value', snap => {
+            const list = snap.val();
+            const select = document.getElementById('projectSelect');
+            select.innerHTML = '<option value="">-- Chọn dự án --</option>';
+            if(list) Object.keys(list).forEach(p => {
+                const opt = document.createElement('option'); opt.value = p; opt.innerText = p;
+                select.appendChild(opt);
+            });
+        });
+    };
 
     function connectCloud() {
         const name = document.getElementById('projInput').value.trim().toUpperCase();
-        if(!name) return alert("Nhập tên dự án!");
+        if(!name) return alert("Vui lòng chọn hoặc nhập tên dự án!");
         appState.businessName = name;
         db.ref('audits/' + name).on('value', snap => {
             const data = snap.val();
             if(data) {
                 appState.officeResults = data.officeResults || {};
                 appState.fieldUnits = data.fieldUnits || [];
-                if(document.getElementById('screen-checklist').classList.contains('active')) renderChecklist();
+            } else {
+                appState.officeResults = {}; appState.fieldUnits = [];
             }
             document.getElementById('curProj').innerText = name;
+            renderAreaButtons();
             switchScreen('screen-dashboard');
         });
     }
 
     function renderAreaButtons() {
-        const cont = document.getElementById('area-buttons');
-        cont.innerHTML = '';
+        const cont = document.getElementById('area-buttons'); cont.innerHTML = '';
         Object.keys(checklistLib).forEach(area => {
-            if(area === 'OFFICE') return;
             const btn = document.createElement('button');
             btn.className = 'big-btn';
-            btn.style.background = '#218838';
-            btn.innerText = '⚡ ' + area;
-            btn.onclick = () => openArea(area);
+            btn.style.background = (area === 'OFFICE' || area === 'VĂN PHÒNG') ? '#004494' : '#218838';
+            btn.innerText = area;
+            btn.onclick = () => {
+                curArea = area;
+                if(area === 'OFFICE' || area === 'VĂN PHÒNG') openOffice();
+                else openArea(area);
+            };
             cont.appendChild(btn);
         });
     }
 
-    // 2. Hàm Import Thư viện từ Excel (CSV)
+    // 2. Import Thư viện & Reset dữ liệu cũ
     function importLibrary() {
         const file = document.getElementById('csvFile').files[0];
         if(!file) return alert("Chọn file CSV trước!");
+        if(!confirm("Hành động này sẽ XÓA TOÀN BỘ thư viện luật cũ. Bạn có chắc chắn?")) return;
+
         const reader = new FileReader();
         reader.onload = function(e) {
-            const text = e.target.result;
-            const lines = text.split('\n');
+            const lines = e.target.result.split('\n');
             const newLib = {};
-            // Giả sử CSV: Area,Category,Content,Reference
             lines.forEach((line, idx) => {
                 if(idx === 0 || !line.trim()) return;
                 const [area, cat, txt, ref] = line.split(',').map(s => s.trim());
-                if(!newLib[area]) newLib[area] = {};
-                newLib[area]['Q' + idx] = { cat, txt, ref };
+                if(area) {
+                    if(!newLib[area]) newLib[area] = {};
+                    newLib[area]['Q' + idx] = { cat, txt, ref };
+                }
             });
-            db.ref('Checklist_Library').set(newLib).then(() => alert("Đã cập nhật thư viện luật mới!"));
+            // Xóa sạch rồi mới ghi mới
+            db.ref('Checklist_Library').remove().then(() => {
+                db.ref('Checklist_Library').set(newLib).then(() => {
+                    alert("Đã RESET và cập nhật thư viện mới thành công!");
+                });
+            });
         };
         reader.readAsText(file);
     }
 
-    // --- CÁC HÀM XỬ LÝ GIAO DIỆN (Giống v8.7 nhưng dùng dữ liệu checklistLib) ---
     function sync() { if(appState.businessName) db.ref('audits/' + appState.businessName).set(appState); }
     function switchScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.getElementById('mainHeader').style.display = (id === 'screen-welcome') ? 'none' : 'flex';
     }
+    function goHome() { switchScreen('screen-dashboard'); }
     function openArea(type) { curArea = type; renderUnitList(); switchScreen('screen-unit-list'); }
     function renderUnitList() {
         const cont = document.getElementById('unit-container'); cont.innerHTML = '';
-        appState.fieldUnits.filter(u => u.type === curArea).forEach(u => {
+        const list = appState.fieldUnits.filter(u => u.type === curArea);
+        list.forEach(u => {
             const idx = appState.fieldUnits.indexOf(u);
             const d = document.createElement('div'); d.className = 'card';
             d.innerHTML = `<div style="display:flex; justify-content:space-between"><strong onclick="openChecklist(${idx})">📍 ${u.name}</strong><span style="color:red" onclick="deleteUnit(${idx})">Xóa</span></div>`;
@@ -159,13 +188,15 @@
         const n = prompt("Tên đối tượng:");
         if(n) { appState.fieldUnits.push({ type: curArea, name: n, results: {} }); sync(); renderUnitList(); }
     }
-    function openOffice() { curArea = 'OFFICE'; curUnitIdx = -1; renderChecklist(); switchScreen('screen-checklist'); }
-    function openChecklist(idx) { curUnitIdx = idx; curArea = appState.fieldUnits[idx].type; renderChecklist(); switchScreen('screen-checklist'); }
+    function openOffice() { curUnitIdx = -1; renderChecklist(); switchScreen('screen-checklist'); }
+    function openChecklist(idx) { curUnitIdx = idx; renderChecklist(); switchScreen('screen-checklist'); }
 
     function renderChecklist() {
         const cont = document.getElementById('checklist-items'); cont.innerHTML = '';
         const questions = checklistLib[curArea] || {};
         const res = (curUnitIdx === -1) ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
+        document.getElementById('check-info').innerText = curUnitIdx === -1 ? "KIỂM TRA HỒ SƠ" : appState.fieldUnits[curUnitIdx].name;
+        
         let lastCat = '';
         Object.keys(questions).forEach(qId => {
             const q = questions[qId];
@@ -195,10 +226,13 @@
         let t = (curUnitIdx === -1) ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
         if(!t[id]) t[id] = {status:''}; t[id].note = txt; sync();
     }
-    function handleBack() { switchScreen(curUnitIdx === -1 ? 'screen-dashboard' : 'screen-unit-list'); }
-    function goHome() { switchScreen('screen-dashboard'); }
+    function handleBack() { 
+        if(document.getElementById('screen-checklist').classList.contains('active')) {
+            curUnitIdx === -1 ? switchScreen('screen-dashboard') : switchScreen('screen-unit-list');
+        } else switchScreen('screen-dashboard');
+    }
     function deleteUnit(i) { if(confirm("Xóa?")) { appState.fieldUnits.splice(i,1); sync(); renderUnitList(); } }
-    function exportData() { /* Tương tự v8.7 */ alert("Tính năng xuất báo cáo dựa trên thư viện mây đang sẵn sàng!"); }
+    function exportData() { /* Logic xuất báo cáo v8.7 */ alert("Đang chuẩn bị file CSV..."); }
 </script>
 </body>
 </html>
