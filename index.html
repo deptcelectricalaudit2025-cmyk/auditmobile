@@ -97,14 +97,16 @@
     </div>
 
 <script>
-    // --- KHỞI TẠO FIREBASE ---
+    // --- KHỞI TẠO FIREBASE (Đã sửa databaseURL cho đúng Region Asia) ---
     const firebaseConfig = {
         apiKey: "AIzaSyAOCGFGjyzjKlQNQK5TvWD-5wxyhW93h88",
         authDomain: "auditmobile-6fae9.firebaseapp.com",
         projectId: "auditmobile-6fae9",
         storageBucket: "auditmobile-6fae9.firebasestorage.app",
         messagingSenderId: "929776192269",
-        appId: "1:929776192269:web:ca0d8a3a277f4ccfb83e44"
+        appId: "1:929776192269:web:ca0d8a3a277f4ccfb83e44",
+        // Dòng cực kỳ quan trọng để sửa lỗi của anh:
+        databaseURL: "https://auditmobile-6fae9-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
 
     try {
@@ -113,6 +115,8 @@
     } catch (e) {
         alert("Lỗi khởi tạo Firebase: " + e.message);
     }
+
+    // ... (Toàn bộ các phần code xử lý phía dưới giữ nguyên như bản v8.1) ...
 
     const REF_DETAILS = {
         "Luật ĐL Đ55": "Hồ sơ thiết kế, bản vẽ thi công, sơ đồ nguyên lý phải đầy đủ.",
