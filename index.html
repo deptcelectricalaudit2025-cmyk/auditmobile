@@ -3,298 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App An Toàn Điện v8.1 | VDC</title>
+    <title>VDC Audit v8.5 | Trần Công Đẹp</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
     <style>
         :root {
-            --primary: #0056b3; --secondary: #6c757d; --success: #28a745;
-            --danger: #dc3545; --light: #f1f3f5; --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --primary: #0056b3; --success: #28a745; --danger: #dc3545; --light: #f8f9fa;
         }
-        body { font-family: -apple-system, sans-serif; background: var(--light); margin: 0; padding-bottom: 20px; }
+        body { font-family: -apple-system, sans-serif; background: #e9ecef; margin: 0; padding-bottom: 30px; }
         .app-header { background: var(--primary); color: white; padding: 15px; text-align: center; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
-        .screen { display: none; padding: 15px; }
+        .screen { display: none; padding: 15px; animation: fadeIn 0.3s; }
         .screen.active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; }
-        .big-btn { width: 100%; padding: 16px; margin-bottom: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
-        .btn-primary { background: linear-gradient(135deg, #0056b3, #004494); }
-        .btn-field { background: linear-gradient(135deg, #28a745, #218838); }
-        input { width: 100%; padding: 15px; box-sizing: border-box; border-radius: 8px; border: 2px solid #ddd; font-size: 16px; margin-top: 5px; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .big-btn { width: 100%; padding: 16px; margin-bottom: 12px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
         
-        /* Checklist */
-        .check-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 6px solid #dee2e6; }
-        .status-row { display: flex; gap: 10px; margin: 15px 0; }
-        .btn-status { flex: 1; padding: 12px; border: 1px solid #dee2e6; background: #f8f9fa; border-radius: 8px; font-weight: bold; }
-        .btn-status.active.ok { background: var(--success); color: white; }
-        .btn-status.active.ng { background: var(--danger); color: white; }
-        textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 8px; min-height: 60px; }
+        /* Checklist Styling */
+        .check-item { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 6px solid #ccc; transition: 0.3s; }
+        .check-item.ok { border-left-color: var(--success); }
+        .check-item.ng { border-left-color: var(--danger); }
+        
+        .ref-tag { color: var(--primary); font-size: 12px; font-weight: bold; text-decoration: underline; cursor: pointer; }
+        .status-box { display: flex; gap: 10px; margin: 15px 0; }
+        .btn-status { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; background: #f8f9fa; }
+        .btn-status.active-ok { background: var(--success); color: white; border-color: var(--success); }
+        .btn-status.active-ng { background: var(--danger); color: white; border-color: var(--danger); }
+        
+        textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: none; min-height: 80px; font-family: inherit; }
+        .photo-upload { margin-top: 10px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #666; }
 
-        /* Modal */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
-        .modal-content { background: white; margin: 15% auto; padding: 25px; border-radius: 15px; width: 85%; max-width: 500px; }
-
-        #toast { visibility: hidden; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; z-index: 3000; }
-        #toast.show { visibility: visible; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div id="toast">Thông báo</div>
-
-    <div id="refModal" class="modal" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="modalTitle" style="color:var(--primary)"></h3>
-            <p id="modalBody"></p>
-            <button class="big-btn btn-primary" onclick="closeModal()">Đóng</button>
-        </div>
-    </div>
-
     <div class="app-header" id="mainHeader" style="display:none;">
-        <button style="background:none; border:none; color:white; font-size:20px;" onclick="handleBack()">⬅️</button>
-        <h1 style="margin:0; font-size:18px;">VDC - An Toàn Điện</h1>
-        <button style="background:none; border:none; color:white; font-size:20px;" onclick="goHome()">🏠</button>
+        <button onclick="handleBack()" style="background:none; border:none; color:white; font-size:20px;">⬅️</button>
+        <h1 id="headerTitle" style="margin:0; font-size:18px;">VDC Audit</h1>
+        <button onclick="goHome()" style="background:none; border:none; color:white; font-size:20px;">🏠</button>
     </div>
 
     <div id="screen-welcome" class="screen active">
-        <div class="card" style="text-align:center;">
-            <div style="font-size: 50px;">☁️</div>
-            <h2>Dự Án Audit v8.1</h2>
+        <div class="card" style="text-align:center; margin-top:50px;">
+            <h2>🛡️ Hệ Thống Kiểm Tra v8.5</h2>
             <p>Chào anh <strong>Trần Công Đẹp</strong></p>
-            <div style="text-align:left;">
-                <label>TÊN DỰ ÁN:</label>
-                <input type="text" id="businessNameInput" placeholder="Ví dụ: HEINEKEN_2026">
-            </div>
-            <button class="big-btn btn-primary" style="margin-top:20px;" onclick="confirmStartSession()">KẾT NỐI HỆ THỐNG</button>
+            <input type="text" id="projInput" style="width:100%; padding:15px; box-sizing:border-box; border-radius:8px; border:2px solid #ddd;" placeholder="NHẬP TÊN DỰ ÁN...">
+            <button class="big-btn" style="background:var(--primary); margin-top:15px;" onclick="connectCloud()">KẾT NỐI CLOUD (ASIA)</button>
         </div>
     </div>
 
     <div id="screen-dashboard" class="screen">
-        <div class="card">
-            <div>Dự án: <strong id="displayBusinessName" style="color:var(--primary)"></strong></div>
-            <div style="font-size:12px; color:var(--success)">● Cloud Sync Active</div>
+        <div class="card" style="border-top:5px solid var(--primary)">
+            Dự án: <strong id="curProj" style="color:var(--primary)"></strong>
         </div>
-        <button class="big-btn btn-primary" onclick="goToOfficeCheck()">📂 HỒ SƠ VĂN PHÒNG</button>
-        <button class="big-btn btn-field" onclick="goToFieldSelection()">🏗️ HIỆN TRƯỜNG</button>
-        <button class="big-btn" style="background:#217346" onclick="exportToExcel()">📥 TẢI BÁO CÁO (CSV)</button>
+        <button class="big-btn" style="background:#004494" onclick="openOffice()">📂 1. KIỂM TRA HỒ SƠ</button>
+        <button class="big-btn" style="background:#218838" onclick="switchScreen('screen-field-select')">🏗️ 2. KIỂM TRA HIỆN TRƯỜNG</button>
+        <button class="big-btn" style="background:#5a6268" onclick="exportData()">📥 XUẤT BÁO CÁO (CSV)</button>
     </div>
 
     <div id="screen-field-select" class="screen">
-        <button class="big-btn btn-field" onclick="goToUnitList('SUBSTATION')">⚡ TRẠM BIẾN ÁP</button>
-        <button class="big-btn btn-field" onclick="goToUnitList('MSB')">🔌 PHÒNG ĐIỆN CHÍNH</button>
-        <button class="big-btn btn-field" onclick="goToUnitList('HAZARD')">❄️ KHO HÓA CHẤT / LẠNH</button>
-        <button class="big-btn btn-field" onclick="goToUnitList('LAB')">🧪 PHÒNG LAB</button>
+        <button class="big-btn" style="background:#28a745" onclick="openUnits('SUBSTATION', 'TRẠM BIẾN ÁP')">⚡ TRẠM BIẾN ÁP</button>
+        <button class="big-btn" style="background:#28a745" onclick="openUnits('MSB', 'PHÒNG ĐIỆN')">🔌 PHÒNG ĐIỆN</button>
+        <button class="big-btn" style="background:#28a745" onclick="openUnits('HAZARD', 'KHO HÓA CHẤT')">❄️ KHO HÓA CHẤT/LẠNH</button>
     </div>
 
     <div id="screen-unit-list" class="screen">
-        <button class="big-btn btn-field" style="background:#28a745" onclick="createNewUnit()">+ THÊM ĐỐI TƯỢNG</button>
-        <div id="unit-list-container"></div>
+        <button class="big-btn" style="background:var(--success)" onclick="addUnit()">+ THÊM ĐỐI TƯỢNG MỚI</button>
+        <div id="unit-container"></div>
     </div>
 
     <div id="screen-checklist" class="screen">
-        <div id="checklist-header-info" style="font-weight:bold; margin-bottom:15px; text-align:center;"></div>
-        <div id="checklist-container"></div>
+        <div id="check-info" style="font-weight:bold; text-align:center; margin-bottom:15px;"></div>
+        <div id="checklist-items"></div>
     </div>
 
 <script>
-    // --- KHỞI TẠO FIREBASE (Đã sửa databaseURL cho đúng Region Asia) ---
+    // --- CẤU HÌNH FIREBASE ASIA ---
     const firebaseConfig = {
         apiKey: "AIzaSyAOCGFGjyzjKlQNQK5TvWD-5wxyhW93h88",
         authDomain: "auditmobile-6fae9.firebaseapp.com",
         projectId: "auditmobile-6fae9",
+        databaseURL: "https://auditmobile-6fae9-default-rtdb.asia-southeast1.firebasedatabase.app",
         storageBucket: "auditmobile-6fae9.firebasestorage.app",
-        messagingSenderId: "929776192269",
-        appId: "1:929776192269:web:ca0d8a3a277f4ccfb83e44",
-        // Dòng cực kỳ quan trọng để sửa lỗi của anh:
-        databaseURL: "https://auditmobile-6fae9-default-rtdb.asia-southeast1.firebasedatabase.app"
+        appId: "1:929776192269:web:ca0d8a3a277f4ccfb83e44"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    try {
-        firebase.initializeApp(firebaseConfig);
-        var db = firebase.database();
-    } catch (e) {
-        alert("Lỗi khởi tạo Firebase: " + e.message);
-    }
-
-    // ... (Toàn bộ các phần code xử lý phía dưới giữ nguyên như bản v8.1) ...
-
-    const REF_DETAILS = {
-        "Luật ĐL Đ55": "Hồ sơ thiết kế, bản vẽ thi công, sơ đồ nguyên lý phải đầy đủ.",
-        "TT 05/2021": "Nhân viên vận hành phải có Thẻ An Toàn Điện còn hạn.",
-        "QCVN 05A:2020": "Kho hóa chất dùng đèn chống nổ, công tắc đặt bên ngoài.",
-        "QCVN 22/2016": "Độ rọi chiếu sáng trạm tối thiểu 300-500 Lux.",
-        "QPTBE-Đ186": "Vỏ kim loại máy phải được tiếp địa an toàn."
+    // --- DỮ LIỆU CÂU HỎI KIỂM TRA ---
+    const MASTER_DATA = {
+        'OFFICE': [
+            { id: 'O1', txt: 'Hồ sơ thiết kế & hoàn công', ref: 'Luật ĐL Đ55' },
+            { id: 'O2', txt: 'Thẻ an toàn điện nhân viên', ref: 'TT 05/2021' }
+        ],
+        'SUBSTATION': [
+            { id: 'S1', txt: 'Biển báo nguy hiểm, cấm lại gần', ref: 'QCVN 25' },
+            { id: 'S2', txt: 'Độ rọi chiếu sáng trạm (>300 Lux)', ref: 'QCVN 22/2016' },
+            { id: 'S3', txt: 'Sào cách điện, găng tay, ủng', ref: 'Thông tư 05' }
+        ],
+        'MSB': [
+            { id: 'M1', txt: 'Sơ đồ nguyên lý tại tủ điện', ref: 'Luật ĐL' },
+            { id: 'M2', txt: 'Thảm cách điện tại vị trí thao tác', ref: 'QCVN 01' }
+        ],
+        'HAZARD': [
+            { id: 'H1', txt: 'Đèn chiếu sáng chống cháy nổ (Ex)', ref: 'QCVN 05A' },
+            { id: 'H2', txt: 'Tiếp địa vỏ kim loại thiết bị', ref: 'QPTBE-Đ186' }
+        ]
     };
-
-    const CHECKLIST_DB = [
-        { id: "DOC-01", area: "OFFICE", text: "Hồ sơ thiết kế & hoàn công", ref: "Luật ĐL Đ55" },
-        { id: "DOC-06", area: "OFFICE", text: "Thẻ an toàn điện còn hạn", ref: "TT 05/2021" },
-        { id: "MSB-01", area: "MSB", text: "Độ rọi chiếu sáng trạm", ref: "QCVN 22/2016" },
-        { id: "HAZ-01", area: "HAZARD", text: "Thiết bị điện chống cháy nổ", ref: "QCVN 05A:2020" },
-        { id: "LAB-01", area: "LAB", text: "Hệ thống tiếp địa vỏ máy", ref: "QPTBE-Đ186" }
-    ];
 
     let appState = { businessName: "", officeResults: {}, fieldUnits: [] };
-    let currentAreaType = '';
-    let currentUnitIndex = -1;
+    let curType = ''; let curUnitIdx = -1;
 
-    // --- XỬ LÝ KẾT NỐI ---
-    function confirmStartSession() {
-        const name = document.getElementById('businessNameInput').value.trim().toUpperCase();
-        if(!name) { alert("Vui lòng nhập tên dự án!"); return; }
-        
+    function connectCloud() {
+        const name = document.getElementById('projInput').value.trim().toUpperCase();
+        if(!name) return alert("Nhập tên dự án!");
         appState.businessName = name;
-        
-        try {
-            // Hiển thị loading nhẹ
-            showToast("Đang kết nối mây...");
-            
-            db.ref('audits/' + name).on('value', (snapshot) => {
-                const data = snapshot.val();
-                if(data) {
-                    appState.officeResults = data.officeResults || {};
-                    appState.fieldUnits = data.fieldUnits || [];
-                    if(document.getElementById('screen-checklist').classList.contains('active')) renderChecklist();
-                }
-                showDashboard();
-            }, (error) => {
-                alert("Lỗi Firebase: " + error.message + "\nAnh hãy kiểm tra lại Rules trong Firebase Console!");
-            });
-        } catch (err) {
-            alert("Lỗi kết nối: " + err.message);
-        }
+        db.ref('audits/' + name).on('value', snap => {
+            const data = snap.val();
+            if(data) {
+                appState.officeResults = data.officeResults || {};
+                appState.fieldUnits = data.fieldUnits || [];
+                if(document.getElementById('screen-checklist').classList.contains('active')) renderChecklist();
+            }
+            document.getElementById('curProj').innerText = name;
+            switchScreen('screen-dashboard');
+        });
     }
 
-    function syncToCloud() {
-        if(!appState.businessName) return;
-        db.ref('audits/' + appState.businessName).set({
-            officeResults: appState.officeResults,
-            fieldUnits: appState.fieldUnits
-        }).then(() => showToast("Đã đồng bộ")).catch(e => alert("Lỗi lưu: " + e.message));
+    function sync() {
+        db.ref('audits/' + appState.businessName).set(appState);
     }
 
-    // --- ĐIỀU HƯỚNG ---
     function switchScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.getElementById('mainHeader').style.display = (id === 'screen-welcome') ? 'none' : 'flex';
         window.scrollTo(0,0);
     }
-    function showDashboard() {
-        document.getElementById('displayBusinessName').innerText = appState.businessName;
-        switchScreen('screen-dashboard');
+
+    function openUnits(type, label) {
+        curType = type;
+        document.getElementById('headerTitle').innerText = label;
+        renderUnitList();
+        switchScreen('screen-unit-list');
     }
+
+    function renderUnitList() {
+        const cont = document.getElementById('unit-container');
+        cont.innerHTML = '';
+        const list = appState.fieldUnits.filter(u => u.type === curType);
+        list.forEach(u => {
+            const realIdx = appState.fieldUnits.indexOf(u);
+            const d = document.createElement('div');
+            d.className = 'card';
+            d.innerHTML = `<div style="display:flex; justify-content:space-between">
+                <strong onclick="openChecklist(${realIdx})">📍 ${u.name}</strong>
+                <span style="color:red" onclick="deleteUnit(${realIdx})">Xóa</span>
+            </div>`;
+            cont.appendChild(d);
+        });
+    }
+
+    function addUnit() {
+        const n = prompt("Tên đối tượng (VD: Trạm số 1):");
+        if(n) { appState.fieldUnits.push({ type: curType, name: n, results: {} }); sync(); renderUnitList(); }
+    }
+
+    function openOffice() {
+        curType = 'OFFICE';
+        document.getElementById('check-info').innerText = "KIỂM TRA HỒ SƠ";
+        renderChecklist();
+        switchScreen('screen-checklist');
+    }
+
+    function openChecklist(idx) {
+        curUnitIdx = idx;
+        curType = appState.fieldUnits[idx].type;
+        document.getElementById('check-info').innerText = appState.fieldUnits[idx].name;
+        renderChecklist();
+        switchScreen('screen-checklist');
+    }
+
+    function renderChecklist() {
+        const cont = document.getElementById('checklist-items');
+        cont.innerHTML = '';
+        const questions = MASTER_DATA[curType] || [];
+        const res = (curType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
+
+        questions.forEach(q => {
+            const val = res[q.id] || { status: '', note: '' };
+            const d = document.createElement('div');
+            d.className = `check-item ${val.status.toLowerCase()}`;
+            d.innerHTML = `
+                <div style="display:flex; justify-content:space-between">
+                    <strong>${q.txt}</strong>
+                    <span class="ref-tag">${q.ref}</span>
+                </div>
+                <div class="status-box">
+                    <button class="btn-status ${val.status==='OK'?'active-ok':''}" onclick="updateRes('${q.id}','OK')">ĐẠT</button>
+                    <button class="btn-status ${val.status==='NG'?'active-ng':''}" onclick="updateRes('${q.id}','NG')">KHÔNG ĐẠT</button>
+                </div>
+                <textarea onchange="updateNote('${q.id}', this.value)" placeholder="Ghi chú vi phạm hoặc kiến nghị...">${val.note || ''}</textarea>
+                <div class="photo-upload">
+                    <span>📷 Chụp ảnh bằng chứng:</span>
+                    <input type="file" accept="image/*" capture="camera" style="font-size:10px">
+                </div>
+            `;
+            cont.appendChild(d);
+        });
+    }
+
+    function updateRes(id, stat) {
+        let target = (curType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
+        if(!target[id]) target[id] = {note:''};
+        target[id].status = (target[id].status === stat) ? '' : stat;
+        sync();
+    }
+
+    function updateNote(id, txt) {
+        let target = (curType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
+        if(!target[id]) target[id] = {status:''};
+        target[id].note = txt;
+        sync();
+    }
+
     function handleBack() {
         const cur = document.querySelector('.screen.active').id;
-        if(cur === 'screen-checklist') (currentAreaType==='OFFICE') ? switchScreen('screen-dashboard') : switchScreen('screen-unit-list');
+        if(cur === 'screen-checklist') (curType === 'OFFICE' ? switchScreen('screen-dashboard') : switchScreen('screen-unit-list'));
         else if(cur === 'screen-unit-list') switchScreen('screen-field-select');
         else switchScreen('screen-dashboard');
     }
+
     function goHome() { switchScreen('screen-dashboard'); }
+    function deleteUnit(i) { if(confirm("Xóa đối tượng này?")) { appState.fieldUnits.splice(i,1); sync(); renderUnitList(); } }
 
-    // --- HIỆN TRƯỜNG ---
-    function goToFieldSelection() { switchScreen('screen-field-select'); }
-    function goToUnitList(area) { currentAreaType = area; renderUnitList(); switchScreen('screen-unit-list'); }
-    function renderUnitList() {
-        const container = document.getElementById('unit-list-container');
-        container.innerHTML = '';
-        const units = appState.fieldUnits.filter(u => u.type === currentAreaType);
-        units.forEach((u, i) => {
-            const realIdx = appState.fieldUnits.indexOf(u);
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `<div style="display:flex; justify-content:space-between">
-                <strong onclick="openUnit(${realIdx})">📍 ${u.name}</strong>
-                <span onclick="deleteUnit(${realIdx})" style="color:red">Xóa</span>
-            </div>`;
-            container.appendChild(div);
+    function exportData() {
+        let csv = "\uFEFFLoai,Doi tuong,Noi dung,Ket qua,Ghi chu\n";
+        // Office
+        MASTER_DATA.OFFICE.forEach(q => {
+            const r = appState.officeResults[q.id] || {};
+            csv += `Ho so,Van phong,"${q.txt}",${r.status||''},"${r.note||''}"\n`;
         });
-    }
-    function createNewUnit() {
-        const name = prompt("Tên đối tượng:");
-        if(name) { appState.fieldUnits.push({ type: currentAreaType, name: name, results: {} }); syncToCloud(); renderUnitList(); }
-    }
-    function openUnit(idx) {
-        currentUnitIndex = idx;
-        document.getElementById('checklist-header-info').innerText = appState.fieldUnits[idx].name;
-        renderChecklist();
-        switchScreen('screen-checklist');
-    }
-
-    // --- VĂN PHÒNG ---
-    function goToOfficeCheck() {
-        currentAreaType = 'OFFICE';
-        document.getElementById('checklist-header-info').innerText = "HỒ SƠ VĂN PHÒNG";
-        renderChecklist();
-        switchScreen('screen-checklist');
-    }
-
-    // --- CHECKLIST ---
-    function renderChecklist() {
-        const container = document.getElementById('checklist-container');
-        container.innerHTML = '';
-        const items = CHECKLIST_DB.filter(i => i.area === currentAreaType);
-        const resultsObj = (currentAreaType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[currentUnitIndex].results;
-        
-        items.forEach(item => {
-            const res = resultsObj[item.id] || { status: '', note: '' };
-            const div = document.createElement('div');
-            div.className = 'check-card';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between">
-                    <strong>${item.text}</strong>
-                    <span style="color:blue; font-size:12px;" onclick="showRef('${item.ref}')">${item.ref}</span>
-                </div>
-                <div class="status-row">
-                    <button class="btn-status ok ${res.status==='OK'?'active':''}" onclick="updateStatus('${item.id}','OK')">ĐẠT</button>
-                    <button class="btn-status ng ${res.status==='NG'?'active':''}" onclick="updateStatus('${item.id}','NG')">LỖI</button>
-                </div>
-                <textarea onchange="updateNote('${item.id}', this.value)" placeholder="Ghi chú...">${res.note}</textarea>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function updateStatus(id, status) {
-        let target = (currentAreaType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[currentUnitIndex].results;
-        if(!target[id]) target[id] = {note:''};
-        target[id].status = (target[id].status === status) ? '' : status;
-        syncToCloud();
-    }
-    function updateNote(id, val) {
-        let target = (currentAreaType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[currentUnitIndex].results;
-        if(!target[id]) target[id] = {status:''};
-        target[id].note = val; syncToCloud();
-    }
-
-    function showRef(ref) {
-        document.getElementById('modalTitle').innerText = ref;
-        document.getElementById('modalBody').innerText = REF_DETAILS[ref] || "Đang cập nhật...";
-        document.getElementById('refModal').style.display = 'block';
-    }
-    function closeModal() { document.getElementById('refModal').style.display = 'none'; }
-    function showToast(m) { const t = document.getElementById('toast'); t.innerText=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2000); }
-    function deleteUnit(idx) { if(confirm("Xóa?")) { appState.fieldUnits.splice(idx, 1); syncToCloud(); renderUnitList(); } }
-
-    function exportToExcel() {
-        const BOM = "\uFEFF";
-        let csv = BOM + "Khu vuc,Doi tuong,Noi dung,Ket qua,Ghi chu,Tham chieu\n";
-        // Xuất Office
-        CHECKLIST_DB.filter(i=>i.area==='OFFICE').forEach(i=>{
-            const r = appState.officeResults[i.id] || {};
-            csv += `Van phong,Ho so,${i.text},${r.status||''},"${r.note||''}",${i.ref}\n`;
-        });
-        // Xuất Hiện trường
-        appState.fieldUnits.forEach(u=>{
-            CHECKLIST_DB.filter(i=>i.area===u.type).forEach(i=>{
-                const r = u.results[i.id] || {};
-                csv += `${u.type},${u.name},${i.text},${r.status||''},"${r.note||''}",${i.ref}\n`;
+        // Field
+        appState.fieldUnits.forEach(u => {
+            (MASTER_DATA[u.type] || []).forEach(q => {
+                const r = u.results[q.id] || {};
+                csv += `${u.type},${u.name},"${q.txt}",${r.status||''},"${r.note||''}"\n`;
             });
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "Bao_Cao.csv";
+        link.download = `BaoCao_${appState.businessName}.csv`;
         link.click();
     }
 </script>
