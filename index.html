@@ -3,82 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VDC Audit v8.5 | Trần Công Đẹp</title>
+    <title>VDC Audit v8.6 | Trần Công Đẹp</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
     <style>
         :root {
-            --primary: #0056b3; --success: #28a745; --danger: #dc3545; --light: #f8f9fa;
+            --primary: #0056b3; --success: #28a745; --danger: #dc3545; --light: #f8f9fa; --dark: #343a40;
         }
-        body { font-family: -apple-system, sans-serif; background: #e9ecef; margin: 0; padding-bottom: 30px; }
-        .app-header { background: var(--primary); color: white; padding: 15px; text-align: center; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 30px; }
+        .app-header { background: var(--primary); color: white; padding: 15px; text-align: center; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .screen { display: none; padding: 15px; animation: fadeIn 0.3s; }
         .screen.active { display: block; }
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        .big-btn { width: 100%; padding: 16px; margin-bottom: 12px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        .big-btn { width: 100%; padding: 16px; margin-bottom: 12px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
+        .big-btn:active { opacity: 0.8; transform: scale(0.98); }
         
-        /* Checklist Styling */
-        .check-item { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 6px solid #ccc; transition: 0.3s; }
-        .check-item.ok { border-left-color: var(--success); }
-        .check-item.ng { border-left-color: var(--danger); }
+        /* Checklist UI */
+        .check-item { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 6px solid #dee2e6; }
+        .check-item.ok { border-left-color: var(--success); background: #f6fff8; }
+        .check-item.ng { border-left-color: var(--danger); background: #fff5f5; }
         
-        .ref-tag { color: var(--primary); font-size: 12px; font-weight: bold; text-decoration: underline; cursor: pointer; }
-        .status-box { display: flex; gap: 10px; margin: 15px 0; }
-        .btn-status { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; background: #f8f9fa; }
+        .status-box { display: flex; gap: 10px; margin: 12px 0; }
+        .btn-status { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; background: white; color: var(--dark); }
         .btn-status.active-ok { background: var(--success); color: white; border-color: var(--success); }
         .btn-status.active-ng { background: var(--danger); color: white; border-color: var(--danger); }
         
-        textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: none; min-height: 80px; font-family: inherit; }
-        .photo-upload { margin-top: 10px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #666; }
+        textarea { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: none; min-height: 80px; font-family: inherit; font-size: 14px; margin-top: 5px; }
+        .ref-tag { background: #e7f1ff; color: var(--primary); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .unit-card { display: flex; justify-content: space-between; align-items: center; padding: 18px; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="app-header" id="mainHeader" style="display:none;">
-        <button onclick="handleBack()" style="background:none; border:none; color:white; font-size:20px;">⬅️</button>
+        <button onclick="handleBack()" style="background:none; border:none; color:white; font-size:22px;">⬅️</button>
         <h1 id="headerTitle" style="margin:0; font-size:18px;">VDC Audit</h1>
-        <button onclick="goHome()" style="background:none; border:none; color:white; font-size:20px;">🏠</button>
+        <button onclick="goHome()" style="background:none; border:none; color:white; font-size:22px;">🏠</button>
     </div>
 
     <div id="screen-welcome" class="screen active">
-        <div class="card" style="text-align:center; margin-top:50px;">
-            <h2>🛡️ Hệ Thống Kiểm Tra v8.5</h2>
-            <p>Chào anh <strong>Trần Công Đẹp</strong></p>
-            <input type="text" id="projInput" style="width:100%; padding:15px; box-sizing:border-box; border-radius:8px; border:2px solid #ddd;" placeholder="NHẬP TÊN DỰ ÁN...">
-            <button class="big-btn" style="background:var(--primary); margin-top:15px;" onclick="connectCloud()">KẾT NỐI CLOUD (ASIA)</button>
+        <div class="card" style="text-align:center; margin-top:60px; padding:30px;">
+            <h2 style="color:var(--primary); margin-bottom:10px;">🛡️ VDC AUDIT v8.6</h2>
+            <p style="color:#666;">Chào anh <strong>Trần Công Đẹp</strong></p>
+            <div style="margin-top:25px; text-align:left;">
+                <label style="font-weight:bold; font-size:13px;">TÊN DỰ ÁN / NHÀ MÁY:</label>
+                <input type="text" id="projInput" style="width:100%; padding:15px; box-sizing:border-box; border-radius:8px; border:2px solid #ddd; margin-top:8px; font-size:16px;" placeholder="Ví dụ: HEINEKEN_2026">
+            </div>
+            <button class="big-btn" style="background:var(--primary); margin-top:25px;" onclick="connectCloud()">KẾT NỐI HỆ THỐNG</button>
         </div>
     </div>
 
     <div id="screen-dashboard" class="screen">
-        <div class="card" style="border-top:5px solid var(--primary)">
-            Dự án: <strong id="curProj" style="color:var(--primary)"></strong>
+        <div class="card" style="border-top:5px solid var(--primary); display:flex; justify-content:space-between; align-items:center;">
+            <span>Dự án: <strong id="curProj" style="color:var(--primary)"></strong></span>
+            <span style="color:var(--success); font-size:12px;">● Online</span>
         </div>
-        <button class="big-btn" style="background:#004494" onclick="openOffice()">📂 1. KIỂM TRA HỒ SƠ</button>
-        <button class="big-btn" style="background:#218838" onclick="switchScreen('screen-field-select')">🏗️ 2. KIỂM TRA HIỆN TRƯỜNG</button>
-        <button class="big-btn" style="background:#5a6268" onclick="exportData()">📥 XUẤT BÁO CÁO (CSV)</button>
-    </div>
-
-    <div id="screen-field-select" class="screen">
-        <button class="big-btn" style="background:#28a745" onclick="openUnits('SUBSTATION', 'TRẠM BIẾN ÁP')">⚡ TRẠM BIẾN ÁP</button>
-        <button class="big-btn" style="background:#28a745" onclick="openUnits('MSB', 'PHÒNG ĐIỆN')">🔌 PHÒNG ĐIỆN</button>
-        <button class="big-btn" style="background:#28a745" onclick="openUnits('HAZARD', 'KHO HÓA CHẤT')">❄️ KHO HÓA CHẤT/LẠNH</button>
+        <button class="big-btn" style="background:#004494" onclick="openOffice()">📂 1. KIỂM TRA HỒ SƠ VĂN PHÒNG</button>
+        <div style="margin: 20px 0 10px 5px; font-weight:bold; color:var(--dark);">🏗️ 2. KIỂM TRA HIỆN TRƯỜNG:</div>
+        <button class="big-btn" style="background:#218838" onclick="openArea('SUBSTATION', 'TRẠM BIẾN ÁP')">⚡ TRẠM BIẾN ÁP</button>
+        <button class="big-btn" style="background:#28a745" onclick="openArea('MSB', 'PHÒNG ĐIỆN / TỦ CHÍNH')">🔌 PHÒNG ĐIỆN / TỦ MSB</button>
+        <button class="big-btn" style="background:#198754" onclick="openArea('HAZARD', 'KHO HÓA CHẤT / KHO LẠNH')">❄️ KHO HÓA CHẤT / LẠNH</button>
+        
+        <button class="big-btn" style="background:#6c757d; margin-top:30px;" onclick="exportData()">📥 TẢI BÁO CÁO (CSV)</button>
     </div>
 
     <div id="screen-unit-list" class="screen">
+        <div id="area-label" style="font-weight:bold; color:var(--primary); margin-bottom:15px; font-size:18px;"></div>
         <button class="big-btn" style="background:var(--success)" onclick="addUnit()">+ THÊM ĐỐI TƯỢNG MỚI</button>
         <div id="unit-container"></div>
     </div>
 
     <div id="screen-checklist" class="screen">
-        <div id="check-info" style="font-weight:bold; text-align:center; margin-bottom:15px;"></div>
+        <div id="check-info" style="background:white; padding:15px; border-radius:10px; font-weight:bold; text-align:center; margin-bottom:15px; color:var(--primary); border:1px solid #ddd;"></div>
         <div id="checklist-items"></div>
+        <button class="big-btn" style="background:var(--primary); margin-top:20px;" onclick="handleBack()">HOÀN THÀNH</button>
     </div>
 
 <script>
-    // --- CẤU HÌNH FIREBASE ASIA ---
+    // --- CẤU HÌNH FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyAOCGFGjyzjKlQNQK5TvWD-5wxyhW93h88",
         authDomain: "auditmobile-6fae9.firebaseapp.com",
@@ -90,33 +95,41 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- DỮ LIỆU CÂU HỎI KIỂM TRA ---
-    const MASTER_DATA = {
+    // --- BỘ CÂU HỎI CHO TỪNG LOẠI (MASTER DATA) ---
+    const MASTER_QUESTIONS = {
         'OFFICE': [
-            { id: 'O1', txt: 'Hồ sơ thiết kế & hoàn công', ref: 'Luật ĐL Đ55' },
-            { id: 'O2', txt: 'Thẻ an toàn điện nhân viên', ref: 'TT 05/2021' }
+            { id: 'O1', txt: 'Hồ sơ thiết kế, bản vẽ hoàn công hệ thống điện', ref: 'Luật ĐL Đ55' },
+            { id: 'O2', txt: 'Thẻ an toàn điện (còn hạn & đúng bậc an toàn)', ref: 'TT 05/2021' },
+            { id: 'O3', txt: 'Sổ nhật ký vận hành & xử lý sự cố', ref: 'QCVN 01' },
+            { id: 'O4', txt: 'Biên bản kiểm định thiết bị nghiêm ngặt', ref: 'NĐ 44/2016' }
         ],
         'SUBSTATION': [
-            { id: 'S1', txt: 'Biển báo nguy hiểm, cấm lại gần', ref: 'QCVN 25' },
+            { id: 'S1', txt: 'Biển báo "Nguy hiểm - Cấm lại gần"', ref: 'QCVN 25' },
             { id: 'S2', txt: 'Độ rọi chiếu sáng trạm (>300 Lux)', ref: 'QCVN 22/2016' },
-            { id: 'S3', txt: 'Sào cách điện, găng tay, ủng', ref: 'Thông tư 05' }
+            { id: 'S3', txt: 'Sào cách điện, găng tay, ủng (kiểm định còn hạn)', ref: 'TT 05/2021' },
+            { id: 'S4', txt: 'Khóa cửa trạm & lưới chắn ngăn động vật', ref: 'QPTBE' },
+            { id: 'S5', txt: 'Hệ thống PCCC tại trạm (bình khí, cát)', ref: 'Luật PCCC' }
         ],
         'MSB': [
-            { id: 'M1', txt: 'Sơ đồ nguyên lý tại tủ điện', ref: 'Luật ĐL' },
-            { id: 'M2', txt: 'Thảm cách điện tại vị trí thao tác', ref: 'QCVN 01' }
+            { id: 'M1', txt: 'Sơ đồ nguyên lý dán tại mặt tủ điện', ref: 'Luật ĐL' },
+            { id: 'M2', txt: 'Thảm cách điện tại vị trí thao tác', ref: 'QCVN 01' },
+            { id: 'M3', txt: 'Đậy nắp chắn mica ngăn tiếp xúc bộ phận mang điện', ref: 'QCVN 01' },
+            { id: 'M4', txt: 'Ghi nhãn tên các MC/CB rõ ràng', ref: 'Tiêu chuẩn kỹ thuật' }
         ],
         'HAZARD': [
-            { id: 'H1', txt: 'Đèn chiếu sáng chống cháy nổ (Ex)', ref: 'QCVN 05A' },
-            { id: 'H2', txt: 'Tiếp địa vỏ kim loại thiết bị', ref: 'QPTBE-Đ186' }
+            { id: 'H1', txt: 'Đèn chiếu sáng chuẩn chống cháy nổ (Ex)', ref: 'QCVN 05A' },
+            { id: 'H2', txt: 'Tiếp địa vỏ kim loại thiết bị/bồn chứa', ref: 'QPTBE-Đ186' },
+            { id: 'H3', txt: 'Công tắc, ổ cắm đặt bên ngoài kho', ref: 'QCVN 05A' }
         ]
     };
 
     let appState = { businessName: "", officeResults: {}, fieldUnits: [] };
-    let curType = ''; let curUnitIdx = -1;
+    let curAreaType = ''; // Office, Substation, MSB...
+    let curUnitIdx = -1;  // Chỉ số của đối tượng đang chọn
 
     function connectCloud() {
         const name = document.getElementById('projInput').value.trim().toUpperCase();
-        if(!name) return alert("Nhập tên dự án!");
+        if(!name) return alert("Vui lòng nhập tên dự án!");
         appState.businessName = name;
         db.ref('audits/' + name).on('value', snap => {
             const data = snap.val();
@@ -131,6 +144,7 @@
     }
 
     function sync() {
+        if(!appState.businessName) return;
         db.ref('audits/' + appState.businessName).set(appState);
     }
 
@@ -141,9 +155,10 @@
         window.scrollTo(0,0);
     }
 
-    function openUnits(type, label) {
-        curType = type;
+    function openArea(type, label) {
+        curAreaType = type;
         document.getElementById('headerTitle').innerText = label;
+        document.getElementById('area-label').innerText = label;
         renderUnitList();
         switchScreen('screen-unit-list');
     }
@@ -151,35 +166,50 @@
     function renderUnitList() {
         const cont = document.getElementById('unit-container');
         cont.innerHTML = '';
-        const list = appState.fieldUnits.filter(u => u.type === curType);
+        const list = appState.fieldUnits.filter(u => u.type === curAreaType);
+        
+        if(list.length === 0) {
+            cont.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">Chưa có đối tượng nào. Vui lòng thêm mới.</p>';
+        }
+
         list.forEach(u => {
             const realIdx = appState.fieldUnits.indexOf(u);
             const d = document.createElement('div');
-            d.className = 'card';
-            d.innerHTML = `<div style="display:flex; justify-content:space-between">
-                <strong onclick="openChecklist(${realIdx})">📍 ${u.name}</strong>
-                <span style="color:red" onclick="deleteUnit(${realIdx})">Xóa</span>
-            </div>`;
+            d.className = 'card unit-card';
+            d.innerHTML = `
+                <div style="flex-grow:1; cursor:pointer;" onclick="openChecklist(${realIdx})">
+                    <div style="font-weight:bold; font-size:16px; color:var(--primary);">📍 ${u.name}</div>
+                    <div style="font-size:12px; color:#666; margin-top:4px;">Bấm để bắt đầu kiểm tra</div>
+                </div>
+                <button onclick="deleteUnit(${realIdx})" style="background:none; border:none; color:var(--danger); font-weight:bold; padding:10px;">Xóa</button>
+            `;
             cont.appendChild(d);
         });
     }
 
     function addUnit() {
-        const n = prompt("Tên đối tượng (VD: Trạm số 1):");
-        if(n) { appState.fieldUnits.push({ type: curType, name: n, results: {} }); sync(); renderUnitList(); }
+        const n = prompt("Nhập tên đối tượng cụ thể (VD: Trạm BA số 1, Tủ MSB-02...):");
+        if(n) {
+            appState.fieldUnits.push({ type: curAreaType, name: n, results: {} });
+            sync();
+            renderUnitList();
+        }
     }
 
     function openOffice() {
-        curType = 'OFFICE';
-        document.getElementById('check-info').innerText = "KIỂM TRA HỒ SƠ";
+        curAreaType = 'OFFICE';
+        curUnitIdx = -1;
+        document.getElementById('headerTitle').innerText = "HỒ SƠ VĂN PHÒNG";
+        document.getElementById('check-info').innerText = "DANH MỤC KIỂM TRA HỒ SƠ";
         renderChecklist();
         switchScreen('screen-checklist');
     }
 
     function openChecklist(idx) {
         curUnitIdx = idx;
-        curType = appState.fieldUnits[idx].type;
-        document.getElementById('check-info').innerText = appState.fieldUnits[idx].name;
+        curAreaType = appState.fieldUnits[idx].type;
+        document.getElementById('headerTitle').innerText = "FORM KIỂM TRA";
+        document.getElementById('check-info').innerText = "ĐỐI TƯỢNG: " + appState.fieldUnits[idx].name;
         renderChecklist();
         switchScreen('screen-checklist');
     }
@@ -187,41 +217,38 @@
     function renderChecklist() {
         const cont = document.getElementById('checklist-items');
         cont.innerHTML = '';
-        const questions = MASTER_DATA[curType] || [];
-        const res = (curType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
+        const questions = MASTER_QUESTIONS[curAreaType] || [];
+        const res = (curUnitIdx === -1) ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
 
         questions.forEach(q => {
             const val = res[q.id] || { status: '', note: '' };
             const d = document.createElement('div');
             d.className = `check-item ${val.status.toLowerCase()}`;
             d.innerHTML = `
-                <div style="display:flex; justify-content:space-between">
-                    <strong>${q.txt}</strong>
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div style="font-weight:600; font-size:15px; flex:1; padding-right:10px;">${q.txt}</div>
                     <span class="ref-tag">${q.ref}</span>
                 </div>
                 <div class="status-box">
                     <button class="btn-status ${val.status==='OK'?'active-ok':''}" onclick="updateRes('${q.id}','OK')">ĐẠT</button>
-                    <button class="btn-status ${val.status==='NG'?'active-ng':''}" onclick="updateRes('${q.id}','NG')">KHÔNG ĐẠT</button>
+                    <button class="btn-status ${val.status==='NG'?'active-ng':''}" onclick="updateRes('${q.id}','NG')">LỖI</button>
                 </div>
-                <textarea onchange="updateNote('${q.id}', this.value)" placeholder="Ghi chú vi phạm hoặc kiến nghị...">${val.note || ''}</textarea>
-                <div class="photo-upload">
-                    <span>📷 Chụp ảnh bằng chứng:</span>
-                    <input type="file" accept="image/*" capture="camera" style="font-size:10px">
-                </div>
+                <textarea onchange="updateNote('${q.id}', this.value)" placeholder="Ghi chú chi tiết vi phạm hoặc kiến nghị...">${val.note || ''}</textarea>
             `;
             cont.appendChild(d);
         });
     }
 
     function updateRes(id, stat) {
-        let target = (curType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
+        let target = (curUnitIdx === -1) ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
         if(!target[id]) target[id] = {note:''};
         target[id].status = (target[id].status === stat) ? '' : stat;
         sync();
+        renderChecklist(); // Cập nhật màu sắc card ngay lập tức
     }
 
     function updateNote(id, txt) {
-        let target = (curType === 'OFFICE') ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
+        let target = (curUnitIdx === -1) ? appState.officeResults : appState.fieldUnits[curUnitIdx].results;
         if(!target[id]) target[id] = {status:''};
         target[id].note = txt;
         sync();
@@ -229,32 +256,37 @@
 
     function handleBack() {
         const cur = document.querySelector('.screen.active').id;
-        if(cur === 'screen-checklist') (curType === 'OFFICE' ? switchScreen('screen-dashboard') : switchScreen('screen-unit-list'));
-        else if(cur === 'screen-unit-list') switchScreen('screen-field-select');
-        else switchScreen('screen-dashboard');
+        if(cur === 'screen-checklist') {
+            (curUnitIdx === -1) ? switchScreen('screen-dashboard') : switchScreen('screen-unit-list');
+        } else if(cur === 'screen-unit-list') {
+            switchScreen('screen-dashboard');
+        } else {
+            switchScreen('screen-dashboard');
+        }
     }
 
     function goHome() { switchScreen('screen-dashboard'); }
-    function deleteUnit(i) { if(confirm("Xóa đối tượng này?")) { appState.fieldUnits.splice(i,1); sync(); renderUnitList(); } }
+    function deleteUnit(i) { if(confirm("Xóa đối tượng này sẽ mất toàn bộ kết quả kiểm tra bên trong?")) { appState.fieldUnits.splice(i,1); sync(); renderUnitList(); } }
 
     function exportData() {
-        let csv = "\uFEFFLoai,Doi tuong,Noi dung,Ket qua,Ghi chu\n";
-        // Office
-        MASTER_DATA.OFFICE.forEach(q => {
+        let csv = "\uFEFFPhan loai,Doi tuong,Noi dung kiem tra,Ket qua,Ghi chu,Tham chieu\n";
+        // Xuất Hồ sơ
+        MASTER_QUESTIONS.OFFICE.forEach(q => {
             const r = appState.officeResults[q.id] || {};
-            csv += `Ho so,Van phong,"${q.txt}",${r.status||''},"${r.note||''}"\n`;
+            csv += `VAN PHONG,Ho so,"${q.txt}",${r.status||''},"${(r.note||'').replace(/"/g,'""')}",${q.ref}\n`;
         });
-        // Field
+        // Xuất Hiện trường
         appState.fieldUnits.forEach(u => {
-            (MASTER_DATA[u.type] || []).forEach(q => {
+            const qs = MASTER_QUESTIONS[u.type] || [];
+            qs.forEach(q => {
                 const r = u.results[q.id] || {};
-                csv += `${u.type},${u.name},"${q.txt}",${r.status||''},"${r.note||''}"\n`;
+                csv += `${u.type},${u.name},"${q.txt}",${r.status||''},"${(r.note||'').replace(/"/g,'""')}",${q.ref}\n`;
             });
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `BaoCao_${appState.businessName}.csv`;
+        link.download = `Audit_VDC_${appState.businessName}.csv`;
         link.click();
     }
 </script>
